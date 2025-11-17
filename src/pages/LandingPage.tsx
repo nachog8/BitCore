@@ -1,6 +1,6 @@
-import { motion, useInView, useScroll, useTransform } from 'framer-motion';
-import { useRef } from 'react';
-import { ArrowRight, AlertCircle, CheckCircle, TrendingUp, Users, Clock, Target, Circle, X, Zap, BarChart3, FileX } from 'lucide-react';
+import { motion, useInView } from 'framer-motion';
+import { useRef, useState, useEffect } from 'react';
+import { ArrowRight, AlertCircle, CheckCircle, TrendingUp, Users, Clock, Target, Circle, X, Zap, BarChart3, FileX, ArrowUp } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 
 function LandingPage() {
@@ -15,18 +15,53 @@ function LandingPage() {
   const solutionInView = useInView(solutionRef, { once: true, margin: '-100px' });
   const qrInView = useInView(qrRef, { once: true, margin: '-100px' });
 
-  // Scroll animations
-  const { scrollYProgress: heroScrollProgress } = useScroll({
-    target: heroRef,
-    offset: ['start start', 'end start']
-  });
+  const [showScrollTop, setShowScrollTop] = useState(false);
 
-  const heroY = useTransform(heroScrollProgress, [0, 1], ['0%', '50%']);
-  const heroOpacity = useTransform(heroScrollProgress, [0, 0.5], [1, 0]);
+  useEffect(() => {
+    const handleScroll = () => {
+      setShowScrollTop(window.scrollY > 300);
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const smoothScrollTo = (targetPosition: number, duration: number = 1000) => {
+    const startPosition = window.pageYOffset;
+    const distance = targetPosition - startPosition;
+    let startTime: number | null = null;
+
+    const easeInOutCubic = (t: number): number => {
+      return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+    };
+
+    const animation = (currentTime: number) => {
+      if (startTime === null) startTime = currentTime;
+      const timeElapsed = currentTime - startTime;
+      const progress = Math.min(timeElapsed / duration, 1);
+      const ease = easeInOutCubic(progress);
+
+      window.scrollTo(0, startPosition + distance * ease);
+
+      if (timeElapsed < duration) {
+        requestAnimationFrame(animation);
+      }
+    };
+
+    requestAnimationFrame(animation);
+  };
 
   const scrollToSection = (id: string) => {
     const element = document.getElementById(id);
-    element?.scrollIntoView({ behavior: 'smooth' });
+    if (element) {
+      const elementPosition = element.getBoundingClientRect().top;
+      const offsetPosition = elementPosition + window.pageYOffset - 80;
+      smoothScrollTo(offsetPosition, 1000);
+    }
+  };
+
+  const scrollToTop = () => {
+    smoothScrollTo(0, 1000);
   };
 
   // URL del deploy en Vercel
@@ -34,12 +69,11 @@ function LandingPage() {
   const currentUrl = baseUrl + '/votar';
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen relative">
+      {/* Fondo continuo para toda la página */}
+      <div className="fixed inset-0 bg-gradient-to-br from-blue-50 via-white to-green-50 opacity-70 -z-10" />
+      
       <section id="hero" ref={heroRef} className="min-h-screen flex items-center justify-center relative overflow-hidden">
-        <motion.div 
-          style={{ y: heroY, opacity: heroOpacity }}
-          className="absolute inset-0 bg-gradient-to-br from-blue-50 via-white to-green-50 opacity-70"
-        />
         
         {/* Animated background elements */}
         <motion.div
@@ -88,29 +122,29 @@ function LandingPage() {
           className="container mx-auto px-6 relative z-10 text-center"
         >
           <motion.div
-            initial={{ scale: 0, rotate: -180, opacity: 0 }}
-            animate={{ scale: 1, rotate: 0, opacity: 1 }}
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
             transition={{ 
-              type: "spring",
-              stiffness: 200,
-              damping: 15,
+              duration: 0.8,
               delay: 0.2 
             }}
             className="mb-6"
           >
-            <motion.div
+            <motion.h1
               animate={{ 
-                rotate: [0, 10, -10, 0],
-                scale: [1, 1.1, 1]
+                scale: [1, 1.05, 1]
               }}
               transition={{ 
                 duration: 3,
                 repeat: Infinity,
-                repeatDelay: 2
+                repeatDelay: 2,
+                ease: "easeInOut"
               }}
+              className="text-6xl md:text-8xl font-bold mb-6"
+              style={{ color: '#1e3a8a' }}
             >
-              <Target className="w-20 h-20 mx-auto text-blue-600 mb-6" />
-            </motion.div>
+              BitCore
+            </motion.h1>
           </motion.div>
 
           <motion.h1
@@ -160,7 +194,7 @@ function LandingPage() {
               y: -2
             }}
             whileTap={{ scale: 0.95 }}
-            onClick={() => scrollToSection('problema')}
+            onClick={() => scrollToSection('timeline')}
             className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-10 py-4 rounded-full text-lg font-semibold hover:shadow-2xl transition-all duration-300 inline-flex items-center gap-3 group relative overflow-hidden"
           >
             <motion.div
@@ -194,9 +228,6 @@ function LandingPage() {
       </section>
 
       <section id="timeline" ref={timelineRef} className="pt-0 pb-20 relative overflow-hidden">
-        {/* Hero background overlay - continuando desde hero */}
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-50 via-white to-green-50 opacity-70" />
-        
         {/* Animated background elements */}
         <motion.div
           animate={{
@@ -504,9 +535,6 @@ function LandingPage() {
       </section>
 
       <section id="problema" ref={problemRef} className="pt-0 pb-20 relative overflow-hidden">
-        {/* Hero background overlay - continuando desde hero */}
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-50 via-white to-green-50 opacity-70" />
-        
         {/* Animated background elements */}
         <motion.div
           animate={{
@@ -547,18 +575,31 @@ function LandingPage() {
           className="absolute bottom-20 left-1/2 w-72 h-72 bg-pink-300 rounded-full mix-blend-multiply filter blur-xl opacity-20"
         />
         
-        {/* Additional decorative elements for problem section */}
+        {/* Subtle background elements */}
         <motion.div
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={problemInView ? { opacity: 0.15, scale: 1 } : { opacity: 0 }}
-          transition={{ duration: 1 }}
-          className="absolute top-0 right-0 w-96 h-96 bg-orange-400 rounded-full mix-blend-multiply filter blur-3xl opacity-30"
+          animate={{
+            scale: [1, 1.1, 1],
+            opacity: [0.05, 0.1, 0.05],
+          }}
+          transition={{
+            duration: 10,
+            repeat: Infinity,
+            ease: "easeInOut"
+          }}
+          className="absolute top-20 left-10 w-96 h-96 bg-gray-400 rounded-full mix-blend-multiply filter blur-3xl"
         />
         <motion.div
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={problemInView ? { opacity: 0.15, scale: 1 } : { opacity: 0 }}
-          transition={{ duration: 1, delay: 0.2 }}
-          className="absolute bottom-0 left-0 w-96 h-96 bg-red-400 rounded-full mix-blend-multiply filter blur-3xl opacity-30"
+          animate={{
+            scale: [1, 1.15, 1],
+            opacity: [0.05, 0.1, 0.05],
+          }}
+          transition={{
+            duration: 12,
+            repeat: Infinity,
+            ease: "easeInOut",
+            delay: 2
+          }}
+          className="absolute bottom-20 right-10 w-96 h-96 bg-gray-400 rounded-full mix-blend-multiply filter blur-3xl"
         />
 
         <div className="container mx-auto px-6 pt-20 relative z-10">
@@ -578,7 +619,9 @@ function LandingPage() {
                 delay: 0.2
               }}
             >
-              <AlertCircle className="w-16 h-16 mx-auto text-orange-500 mb-6" />
+              <div className="inline-flex p-4 rounded-2xl bg-white/20 backdrop-blur-md border border-white/30 shadow-lg mb-6">
+                <AlertCircle className="w-16 h-16 text-slate-700" />
+              </div>
             </motion.div>
             <motion.h2
               initial={{ opacity: 0, y: 20 }}
@@ -598,14 +641,14 @@ function LandingPage() {
             </motion.p>
           </motion.div>
 
-          <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto mb-16">
+          <div className="grid md:grid-cols-3 gap-6 md:gap-8 max-w-6xl mx-auto mb-16">
             {[
               { 
                 icon: Clock, 
                 title: 'Pérdida de Tiempo', 
                 description: 'Los procesos manuales consumían horas valiosas del equipo',
-                color: 'from-orange-500 to-orange-600',
-                bgColor: 'from-orange-50 to-orange-100/50',
+                iconColor: 'text-blue-600',
+                iconBg: 'bg-blue-500/10',
                 delay: 0.2,
                 stats: '40+ horas/semana'
               },
@@ -613,8 +656,8 @@ function LandingPage() {
                 icon: Users, 
                 title: 'Falta de Coordinación', 
                 description: 'La comunicación entre departamentos era ineficiente',
-                color: 'from-red-500 to-red-600',
-                bgColor: 'from-red-50 to-red-100/50',
+                iconColor: 'text-indigo-600',
+                iconBg: 'bg-indigo-500/10',
                 delay: 0.4,
                 stats: '60% ineficiencia'
               },
@@ -622,16 +665,16 @@ function LandingPage() {
                 icon: TrendingUp, 
                 title: 'Crecimiento Limitado', 
                 description: 'La escalabilidad del negocio estaba comprometida',
-                color: 'from-amber-500 to-amber-600',
-                bgColor: 'from-amber-50 to-amber-100/50',
+                iconColor: 'text-slate-600',
+                iconBg: 'bg-slate-500/10',
                 delay: 0.6,
                 stats: '30% pérdida'
               }
             ].map((item, index) => (
               <motion.div
                 key={index}
-                initial={{ opacity: 0, y: 50, scale: 0.9 }}
-                animate={problemInView ? { opacity: 1, y: 0, scale: 1 } : {}}
+                initial={{ opacity: 0, y: 50 }}
+                animate={problemInView ? { opacity: 1, y: 0 } : {}}
                 transition={{ 
                   duration: 0.6, 
                   delay: item.delay,
@@ -639,14 +682,12 @@ function LandingPage() {
                   stiffness: 100
                 }}
                 whileHover={{ 
-                  y: -15, 
-                  scale: 1.02,
-                  boxShadow: '0 25px 50px rgba(249, 115, 22, 0.2)',
+                  y: -10,
                   transition: { duration: 0.3 }
                 }}
                 className="relative group"
               >
-                <div className={`bg-gradient-to-br ${item.bgColor} p-8 rounded-2xl shadow-xl border-2 border-orange-200/50 h-full transition-all duration-300 group-hover:border-orange-300`}>
+                <div className="bg-white/40 backdrop-blur-xl p-8 rounded-3xl shadow-xl border border-white/50 h-full transition-all duration-300 group-hover:bg-white/50 group-hover:shadow-2xl group-hover:border-white/70">
                   <motion.div
                     initial={{ scale: 0 }}
                     animate={problemInView ? { scale: 1 } : {}}
@@ -656,9 +697,9 @@ function LandingPage() {
                       damping: 15,
                       delay: item.delay + 0.2
                     }}
-                    className={`inline-flex p-4 rounded-2xl bg-gradient-to-br ${item.color} mb-6 shadow-lg`}
+                    className={`inline-flex p-4 rounded-2xl ${item.iconBg} backdrop-blur-md mb-6 shadow-lg border border-white/30`}
                   >
-                    <item.icon className="w-8 h-8 text-white" />
+                    <item.icon className={`w-8 h-8 ${item.iconColor}`} />
                   </motion.div>
                   
                   <h3 className="text-2xl font-bold text-gray-900 mb-3">
@@ -673,19 +714,11 @@ function LandingPage() {
                     initial={{ opacity: 0, x: -10 }}
                     animate={problemInView ? { opacity: 1, x: 0 } : {}}
                     transition={{ duration: 0.5, delay: item.delay + 0.4 }}
-                    className="flex items-center gap-2 text-sm font-semibold text-orange-600"
+                    className="flex items-center gap-2 text-sm font-semibold text-gray-600"
                   >
                     <BarChart3 className="w-4 h-4" />
                     <span>{item.stats}</span>
                   </motion.div>
-
-                  {/* Decorative element */}
-                  <motion.div
-                    initial={{ scale: 0, rotate: -45 }}
-                    animate={problemInView ? { scale: 1, rotate: 0 } : {}}
-                    transition={{ duration: 0.5, delay: item.delay + 0.3 }}
-                    className={`absolute top-4 right-4 w-20 h-20 bg-gradient-to-br ${item.color} opacity-10 rounded-full blur-xl`}
-                  />
                 </div>
               </motion.div>
             ))}
@@ -698,12 +731,16 @@ function LandingPage() {
                 icon: FileX,
                 title: 'Datos Desorganizados',
                 description: 'Información dispersa en múltiples sistemas sin integración',
+                iconColor: 'text-slate-600',
+                iconBg: 'bg-slate-500/10',
                 delay: 0.8
               },
               {
                 icon: Zap,
                 title: 'Errores Frecuentes',
                 description: 'Alto margen de error humano afectando la calidad del servicio',
+                iconColor: 'text-indigo-600',
+                iconBg: 'bg-indigo-500/10',
                 delay: 1.0
               }
             ].map((item, index) => (
@@ -717,12 +754,12 @@ function LandingPage() {
                   type: "spring",
                   stiffness: 100
                 }}
-                whileHover={{ x: index % 2 === 0 ? -5 : 5, scale: 1.02 }}
-                className="bg-white p-6 rounded-xl shadow-lg border-l-4 border-orange-500"
+                whileHover={{ y: -5 }}
+                className="bg-white/40 backdrop-blur-xl p-6 rounded-2xl shadow-lg border border-white/50 transition-all duration-300 hover:bg-white/50 hover:shadow-xl"
               >
                 <div className="flex items-start gap-4">
-                  <div className="p-3 bg-orange-100 rounded-lg">
-                    <item.icon className="w-6 h-6 text-orange-600" />
+                  <div className={`p-3 ${item.iconBg} backdrop-blur-md rounded-xl border border-white/30`}>
+                    <item.icon className={`w-6 h-6 ${item.iconColor}`} />
                   </div>
                   <div>
                     <h4 className="text-lg font-bold text-gray-900 mb-2">
@@ -738,62 +775,40 @@ function LandingPage() {
           </div>
 
           <motion.div
-            initial={{ opacity: 0, scale: 0.9, y: 30 }}
-            animate={problemInView ? { opacity: 1, scale: 1, y: 0 } : {}}
+            initial={{ opacity: 0, y: 30 }}
+            animate={problemInView ? { opacity: 1, y: 0 } : {}}
             transition={{ 
               duration: 0.8, 
-              delay: 1.2,
-              type: "spring",
-              stiffness: 100
+              delay: 1.2
             }}
-            whileHover={{ scale: 1.02 }}
+            whileHover={{ y: -5 }}
             className="relative max-w-4xl mx-auto"
           >
-            <div className="bg-gradient-to-r from-orange-500 via-red-500 to-orange-500 p-1 rounded-3xl">
-              <div className="bg-white p-10 rounded-3xl">
-                <div className="flex items-center justify-center gap-3 mb-4">
-                  <X className="w-8 h-8 text-red-500" />
-                  <h3 className="text-2xl font-bold text-gray-900">
-                    El Resultado
-                  </h3>
+            <div className="bg-white/50 backdrop-blur-xl p-8 md:p-10 rounded-3xl shadow-2xl border border-white/60">
+              <div className="flex items-center justify-center gap-3 mb-6">
+                <div className="p-3 bg-slate-500/10 backdrop-blur-md rounded-xl border border-white/30">
+                  <X className="w-8 h-8 text-slate-700" />
                 </div>
-                <motion.p
-                  initial={{ opacity: 0 }}
-                  animate={problemInView ? { opacity: 1 } : {}}
-                  transition={{ duration: 0.8, delay: 1.4 }}
-                  className="text-xl text-gray-700 text-center leading-relaxed"
-                >
-                  Una empresa <span className="font-bold text-orange-600">atrapada en operaciones ineficientes</span>, 
-                  {' '}<span className="font-bold text-red-600">perdiendo oportunidades de mercado</span> y 
-                  {' '}<span className="font-bold text-amber-600">enfrentando la frustración diaria de su equipo</span>.
-                </motion.p>
+                <h3 className="text-2xl md:text-3xl font-bold text-gray-900">
+                  El Resultado
+                </h3>
               </div>
+              <motion.p
+                initial={{ opacity: 0 }}
+                animate={problemInView ? { opacity: 1 } : {}}
+                transition={{ duration: 0.8, delay: 1.4 }}
+                className="text-lg md:text-xl text-gray-700 text-center leading-relaxed"
+              >
+                Una empresa <span className="font-bold text-gray-900">atrapada en operaciones ineficientes</span>, 
+                {' '}<span className="font-bold text-gray-800">perdiendo oportunidades de mercado</span> y 
+                {' '}<span className="font-bold text-gray-900">enfrentando la frustración diaria de su equipo</span>.
+              </motion.p>
             </div>
-            
-            {/* Animated border effect */}
-            <motion.div
-              animate={{
-                boxShadow: [
-                  '0 0 0px rgba(249, 115, 22, 0)',
-                  '0 0 30px rgba(249, 115, 22, 0.3)',
-                  '0 0 0px rgba(249, 115, 22, 0)',
-                ]
-              }}
-              transition={{
-                duration: 2,
-                repeat: Infinity,
-                ease: "easeInOut"
-              }}
-              className="absolute inset-0 rounded-3xl pointer-events-none"
-            />
           </motion.div>
         </div>
       </section>
 
       <section id="solucion" ref={solutionRef} className="min-h-screen flex items-center pt-0 pb-20 relative overflow-hidden">
-        {/* Hero background overlay - continuando desde hero */}
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-50 via-white to-green-50 opacity-70" />
-        
         {/* Animated background elements */}
         <motion.div
           animate={{
@@ -994,9 +1009,6 @@ function LandingPage() {
       </section>
 
       <section id="qr" ref={qrRef} className="min-h-screen flex items-center pt-0 pb-20 relative overflow-hidden">
-        {/* Hero background overlay - continuando desde hero */}
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-50 via-white to-green-50 opacity-70" />
-        
         {/* Animated background elements */}
         <motion.div
           animate={{
@@ -1062,7 +1074,7 @@ function LandingPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={qrInView ? { opacity: 1, y: 0 } : {}}
               transition={{ duration: 0.8, delay: 0.2 }}
-              className="text-4xl md:text-5xl font-bold text-gray-900 mb-6"
+              className="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 mb-4 md:mb-6 px-4"
             >
               ¿Crees que nuestra solución es el camino correcto?
             </motion.h2>
@@ -1070,67 +1082,40 @@ function LandingPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={qrInView ? { opacity: 1, y: 0 } : {}}
               transition={{ duration: 0.8, delay: 0.3 }}
-              className="text-xl text-gray-600 mb-12"
+              className="text-lg md:text-xl text-gray-600 mb-8 md:mb-12 px-4"
             >
               Tu opinión es fundamental para seguir mejorando
             </motion.p>
 
             <motion.div
-              initial={{ opacity: 0, scale: 0.8, rotate: -5 }}
-              animate={qrInView ? { opacity: 1, scale: 1, rotate: 0 } : {}}
-              transition={{ 
-                duration: 0.8, 
-                delay: 0.4,
-                type: "spring",
-                stiffness: 100
-              }}
-              whileHover={{ scale: 1.05, rotate: 2, y: -5 }}
-              className="bg-white p-12 rounded-3xl shadow-2xl border border-gray-100 inline-block relative overflow-hidden"
+              initial={{ opacity: 0, y: 20 }}
+              animate={qrInView ? { opacity: 1, y: 0 } : {}}
+              transition={{ duration: 0.8, delay: 0.4 }}
+              className="bg-white p-6 md:p-12 rounded-3xl shadow-2xl border border-gray-100 w-full max-w-md mx-auto"
             >
-              {/* Animated background gradient */}
-              <motion.div
-                className="absolute inset-0 bg-gradient-to-r from-blue-500/10 via-green-500/10 to-blue-500/10"
-                animate={{
-                  x: ['-100%', '200%'],
-                }}
-                transition={{
-                  duration: 3,
-                  repeat: Infinity,
-                  ease: "linear"
-                }}
-              />
-              <div className="relative z-10">
-                <motion.div
-                  initial={{ scale: 0, rotate: -180 }}
-                  animate={qrInView ? { scale: 1, rotate: 0 } : {}}
-                  transition={{ 
-                    type: "spring",
-                    stiffness: 200,
-                    damping: 15,
-                    delay: 0.6
-                  }}
-                  whileHover={{ scale: 1.1, rotate: 5 }}
-                  className="mb-6"
-                >
-                  <QRCodeSVG
-                    value={currentUrl}
-                    size={280}
-                    level="H"
-                    includeMargin={true}
-                    className="mx-auto"
-                  />
-                </motion.div>
+              <div className="flex flex-col items-center">
+                <div className="mb-6">
+                  <div className="w-[200px] h-[200px] md:w-[280px] md:h-[280px] mx-auto">
+                    <QRCodeSVG
+                      value={currentUrl}
+                      size={280}
+                      level="H"
+                      includeMargin={true}
+                      className="mx-auto w-full h-full"
+                    />
+                  </div>
+                </div>
 
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={qrInView ? { opacity: 1, y: 0 } : {}}
-                  transition={{ duration: 0.8, delay: 0.7 }}
-                  className="space-y-4"
+                  transition={{ duration: 0.8, delay: 0.5 }}
+                  className="space-y-3 md:space-y-4 text-center"
                 >
-                  <p className="text-2xl font-semibold text-gray-900">
+                  <p className="text-lg md:text-2xl font-semibold text-gray-900 px-2">
                     Escanea y vota por nuestra presentación
                   </p>
-                  <p className="text-gray-600">
+                  <p className="text-sm md:text-base text-gray-600 px-2">
                     Usa la cámara de tu dispositivo móvil para escanear el código QR
                   </p>
                 </motion.div>
@@ -1140,14 +1125,14 @@ function LandingPage() {
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={qrInView ? { opacity: 1, y: 0 } : {}}
-              transition={{ duration: 0.8, delay: 0.8 }}
-              className="mt-12"
+              transition={{ duration: 0.8, delay: 0.6 }}
+              className="mt-8 md:mt-12 px-4"
             >
               <motion.a
                 href="/votar"
                 whileHover={{ scale: 1.05, y: -2 }}
                 whileTap={{ scale: 0.95 }}
-                className="inline-block bg-gradient-to-r from-blue-600 to-green-500 text-white px-8 py-4 rounded-full text-lg font-semibold shadow-xl transition-all duration-300 relative overflow-hidden group"
+                className="inline-block bg-gradient-to-r from-blue-600 to-green-500 text-white px-6 md:px-8 py-3 md:py-4 rounded-full text-base md:text-lg font-semibold shadow-xl transition-all duration-300 relative overflow-hidden group w-full md:w-auto text-center"
               >
                 <motion.div
                   className="absolute inset-0 bg-gradient-to-r from-green-500 to-blue-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
@@ -1225,6 +1210,22 @@ function LandingPage() {
           </div>
         </div>
       </footer>
+
+      {/* Botón flotante para volver arriba */}
+      <motion.button
+        initial={{ opacity: 0, scale: 0 }}
+        animate={{ 
+          opacity: showScrollTop ? 1 : 0, 
+          scale: showScrollTop ? 1 : 0 
+        }}
+        whileHover={{ scale: 1.1 }}
+        whileTap={{ scale: 0.9 }}
+        onClick={scrollToTop}
+        className="fixed bottom-6 right-6 md:bottom-8 md:right-8 w-14 h-14 md:w-16 md:h-16 bg-gradient-to-r from-blue-600 to-green-500 text-white rounded-full shadow-2xl z-50 flex items-center justify-center hover:shadow-blue-500/50 transition-shadow duration-300"
+        aria-label="Volver arriba"
+      >
+        <ArrowUp className="w-6 h-6 md:w-7 md:h-7" />
+      </motion.button>
     </div>
   );
 }
