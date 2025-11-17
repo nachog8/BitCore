@@ -1,13 +1,15 @@
 import { motion, useInView } from 'framer-motion';
 import { useRef } from 'react';
-import { ArrowRight, AlertCircle, CheckCircle, TrendingUp, Users, Clock, Target } from 'lucide-react';
+import { ArrowRight, AlertCircle, CheckCircle, TrendingUp, Users, Clock, Target, Circle } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 
 function LandingPage() {
+  const timelineRef = useRef(null);
   const problemRef = useRef(null);
   const solutionRef = useRef(null);
   const qrRef = useRef(null);
 
+  const timelineInView = useInView(timelineRef, { once: true, margin: '-100px' });
   const problemInView = useInView(problemRef, { once: true, margin: '-100px' });
   const solutionInView = useInView(solutionRef, { once: true, margin: '-100px' });
   const qrInView = useInView(qrRef, { once: true, margin: '-100px' });
@@ -88,7 +90,77 @@ function LandingPage() {
         </motion.div>
       </section>
 
-      <section id="problema" ref={problemRef} className="min-h-screen flex items-center py-20 bg-white">
+      <section id="timeline" ref={timelineRef} className="py-20 bg-gradient-to-b from-white to-gray-50">
+        <div className="container mx-auto px-6">
+          <motion.div
+            initial={{ opacity: 0, y: 50 }}
+            animate={timelineInView ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 0.8 }}
+            className="text-center mb-20"
+          >
+            <Clock className="w-16 h-16 mx-auto text-blue-600 mb-6" />
+            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
+              Nuestro Viaje
+            </h2>
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+              Una línea de tiempo que muestra cómo hemos evolucionado y crecido
+            </p>
+          </motion.div>
+
+          <div className="max-w-6xl mx-auto">
+            <div className="relative">
+              <div className="absolute left-1/2 transform -translate-x-1/2 w-1 h-full bg-gradient-to-b from-blue-600 via-purple-500 to-orange-500" />
+
+              <div className="space-y-12">
+                {[
+                  { year: '2022', title: 'Inicio', color: 'from-blue-600 to-blue-700', items: ['Fundación del proyecto', 'Primera solución desarrollada', 'Primer cliente'] },
+                  { year: '2023', title: 'Crecimiento', color: 'from-purple-600 to-purple-700', items: ['Expansión a 10 clientes', 'Mejoras tecnológicas', 'Integración de APIs'] },
+                  { year: '2024', title: 'Consolidación', color: 'from-orange-500 to-red-600', items: ['100+ clientes activos', 'Nuevas funcionalidades', 'Reconocimiento del mercado'] }
+                ].map((milestone, idx) => (
+                  <motion.div
+                    key={idx}
+                    initial={{ opacity: 0, y: 30 }}
+                    animate={timelineInView ? { opacity: 1, y: 0 } : {}}
+                    transition={{ duration: 0.6, delay: idx * 0.2 }}
+                    className={`flex ${idx % 2 === 0 ? 'flex-row' : 'flex-row-reverse'} items-center gap-8 md:gap-12`}
+                  >
+                    <div className="flex-1">
+                      <motion.div
+                        whileHover={{ scale: 1.05 }}
+                        className={`bg-gradient-to-br ${milestone.color} p-8 rounded-2xl text-white shadow-lg`}
+                      >
+                        <h3 className="text-3xl font-bold mb-4">{milestone.year}</h3>
+                        <h4 className="text-2xl font-semibold mb-4">{milestone.title}</h4>
+                        <ul className="space-y-2">
+                          {milestone.items.map((item, i) => (
+                            <li key={i} className="flex items-center gap-2 text-white/90">
+                              <Circle className="w-2 h-2 fill-current" />
+                              <span>{item}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </motion.div>
+                    </div>
+
+                    <motion.div
+                      initial={{ scale: 0 }}
+                      animate={timelineInView ? { scale: 1 } : {}}
+                      transition={{ duration: 0.4, delay: idx * 0.2 + 0.1 }}
+                      className={`hidden md:flex w-12 h-12 rounded-full bg-gradient-to-br ${milestone.color} border-4 border-white shadow-lg items-center justify-center flex-shrink-0`}
+                    >
+                      <Circle className="w-6 h-6 text-white" />
+                    </motion.div>
+
+                    <div className="flex-1" />
+                  </motion.div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="problema" ref={problemRef} className="py-20 bg-white">
         <div className="container mx-auto px-6">
           <motion.div
             initial={{ opacity: 0, y: 50 }}
@@ -161,48 +233,59 @@ function LandingPage() {
           </motion.div>
 
           <div className="max-w-6xl mx-auto">
-            <motion.div
-              initial={{ opacity: 0, x: -50 }}
-              animate={solutionInView ? { opacity: 1, x: 0 } : {}}
-              transition={{ duration: 0.8, delay: 0.2 }}
-              className="grid md:grid-cols-2 gap-12 items-center mb-16"
-            >
-              <div className="space-y-6">
-                <h3 className="text-3xl font-bold text-gray-900">Antes</h3>
+            <div className="grid md:grid-cols-2 gap-8 mb-16">
+              <motion.div
+                initial={{ opacity: 0, x: -50 }}
+                animate={solutionInView ? { opacity: 1, x: 0 } : {}}
+                transition={{ duration: 0.8, delay: 0.2 }}
+                className="bg-gradient-to-br from-red-50 to-orange-50 p-10 rounded-3xl border-2 border-red-200"
+              >
+                <div className="flex items-center gap-3 mb-8">
+                  <AlertCircle className="w-8 h-8 text-red-500" />
+                  <h3 className="text-3xl font-bold text-gray-900">Antes</h3>
+                </div>
                 <div className="space-y-4">
-                  {['Procesos manuales lentos', 'Comunicación fragmentada', 'Datos dispersos', 'Alto margen de error'].map((item, idx) => (
+                  {['Procesos manuales lentos', 'Comunicación fragmentada', 'Datos dispersos', 'Alto margen de error', 'Equipo desmotivado', 'Crecimiento estancado'].map((item, idx) => (
                     <motion.div
                       key={idx}
                       initial={{ opacity: 0, x: -20 }}
                       animate={solutionInView ? { opacity: 1, x: 0 } : {}}
-                      transition={{ duration: 0.5, delay: 0.3 + idx * 0.1 }}
-                      className="flex items-center gap-3 text-gray-600"
+                      transition={{ duration: 0.5, delay: 0.4 + idx * 0.08 }}
+                      className="flex items-center gap-3 text-gray-700"
                     >
-                      <div className="w-2 h-2 bg-red-400 rounded-full" />
-                      <span>{item}</span>
+                      <div className="w-3 h-3 bg-red-400 rounded-full flex-shrink-0" />
+                      <span className="text-lg">{item}</span>
                     </motion.div>
                   ))}
                 </div>
-              </div>
+              </motion.div>
 
-              <div className="space-y-6">
-                <h3 className="text-3xl font-bold text-gray-900">Después</h3>
+              <motion.div
+                initial={{ opacity: 0, x: 50 }}
+                animate={solutionInView ? { opacity: 1, x: 0 } : {}}
+                transition={{ duration: 0.8, delay: 0.2 }}
+                className="bg-gradient-to-br from-green-50 to-emerald-50 p-10 rounded-3xl border-2 border-green-200"
+              >
+                <div className="flex items-center gap-3 mb-8">
+                  <CheckCircle className="w-8 h-8 text-green-500" />
+                  <h3 className="text-3xl font-bold text-gray-900">Después</h3>
+                </div>
                 <div className="space-y-4">
-                  {['Automatización inteligente', 'Colaboración fluida', 'Información centralizada', 'Precisión garantizada'].map((item, idx) => (
+                  {['Automatización inteligente', 'Colaboración fluida', 'Información centralizada', 'Precisión garantizada', 'Equipo motivado', 'Crecimiento exponencial'].map((item, idx) => (
                     <motion.div
                       key={idx}
                       initial={{ opacity: 0, x: 20 }}
                       animate={solutionInView ? { opacity: 1, x: 0 } : {}}
-                      transition={{ duration: 0.5, delay: 0.3 + idx * 0.1 }}
+                      transition={{ duration: 0.5, delay: 0.4 + idx * 0.08 }}
                       className="flex items-center gap-3 text-gray-900 font-medium"
                     >
-                      <CheckCircle className="w-5 h-5 text-green-500" />
-                      <span>{item}</span>
+                      <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0" />
+                      <span className="text-lg">{item}</span>
                     </motion.div>
                   ))}
                 </div>
-              </div>
-            </motion.div>
+              </motion.div>
+            </div>
 
             <motion.div
               initial={{ opacity: 0, y: 30 }}
