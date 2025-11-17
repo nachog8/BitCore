@@ -1204,7 +1204,7 @@ function LandingPage() {
                 transition={{ duration: 0.8, delay: 0.4 }}
                 className="flex justify-center gap-6 text-gray-400"
               >
-                <span>© 2025 Presentación Corporativa</span>
+                <span>© 2025 Presentación para Administracion de sistemas de informacion</span>
               </motion.div>
             </motion.div>
           </div>
